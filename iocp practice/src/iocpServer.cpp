@@ -1,4 +1,6 @@
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib, "ws2_32")
+
 #include <winsock2.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,7 +22,7 @@ struct SOCKETINFO
 DWORD WINAPI WorkerThread(LPVOID arg);
 
 // 소켓 함수 오류 출력 후 종료
-void errQuit(char* msg)
+void errQuit(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -28,13 +30,13 @@ void errQuit(char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+	MessageBox(NULL, (LPCWSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
 
 // 소켓 함수 오류 출력
-void errDisplay(char* msg)
+void errDisplay(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -42,7 +44,7 @@ void errDisplay(char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	printf("[%s] %s", msg, (char*)lpMsgBuf);
+	printf("[%s] %s", msg, lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }
 
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
 
 	// socket()
 	SOCKET listenSock = socket(AF_INET, SOCK_STREAM, 0);
-	if (listenSock == INVALID_SOCKET) errQuit("socket()");
+	if (listenSock == INVALID_SOCKET) errQuit(L"socket()");
 
 	// bind()
 	SOCKADDR_IN serveraddr;
@@ -95,11 +97,11 @@ int main(int argc, char* argv[])
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serveraddr.sin_port = htons(SERVERPORT);
 	retval = bind(listenSock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) errQuit("bind()");
+	if (retval == SOCKET_ERROR) errQuit(L"bind()");
 
 	// listen()
 	retval = listen(listenSock, SOMAXCONN);
-	if (retval == SOCKET_ERROR) errQuit("listen()");
+	if (retval == SOCKET_ERROR) errQuit(L"listen()");
 
 	// 비동기 입출력을 지원하는 소켓 생성. 데이터 통신에 사용할 변수
 	SOCKET clientSock;
@@ -112,7 +114,7 @@ int main(int argc, char* argv[])
 		addrlen = sizeof(clientaddr);
 		clientSock = accept(listenSock, (SOCKADDR*)&clientaddr, &addrlen);
 		if (clientSock == INVALID_SOCKET) {
-			errDisplay("accept()");
+			errDisplay(L"accept()");
 			break;
 		}
 		printf("\n[TCP 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",
@@ -136,7 +138,7 @@ int main(int argc, char* argv[])
 		retval = WSARecv(clientSock, &ptr->wsabuf, 1, &recvbytes, &flags, &ptr->overlapped, NULL);
 		if (retval == SOCKET_ERROR) {
 			if (WSAGetLastError() != WSA_IO_PENDING) {
-				errDisplay("WSARecv()");
+				errDisplay(L"WSARecv()");
 				return 1;
 			}
 			continue;
@@ -160,7 +162,7 @@ DWORD WINAPI WorkerThread(LPVOID arg)
 		SOCKET clientSock;
 		SOCKETINFO *ptr;
 		retval = GetQueuedCompletionStatus(hcp, &cbTransferred,
-			(LPDWORD)&clientSock, (LPOVERLAPPED*)&ptr, INFINITE);
+			(PULONG_PTR)&clientSock, (LPOVERLAPPED*)&ptr, INFINITE);
 
 		// 클라이언트 정보 얻기
 		SOCKADDR_IN clientaddr;
@@ -173,7 +175,7 @@ DWORD WINAPI WorkerThread(LPVOID arg)
 				DWORD temp1, temp2;
 				WSAGetOverlappedResult(ptr->sock, &ptr->overlapped,
 					&temp1, FALSE, &temp2);
-				errDisplay("WSAGetOverlappedResult()");
+				errDisplay(L"WSAGetOverlappedResult()");
 			}
 			closesocket(ptr->sock);
 			printf(" [TCP 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
@@ -207,7 +209,7 @@ DWORD WINAPI WorkerThread(LPVOID arg)
 			retval = WSASend(ptr->sock, &ptr->wsabuf, 1, &sendbytes, 0, &ptr->overlapped, NULL);
 			if (retval == SOCKET_ERROR) {
 				if (WSAGetLastError() != WSA_IO_PENDING) {
-					errDisplay("WSASend()");
+					errDisplay(L"WSASend()");
 				}
 				continue;
 			}
@@ -229,7 +231,7 @@ DWORD WINAPI WorkerThread(LPVOID arg)
 				&flags, &ptr->overlapped, NULL);
 			if (retval == SOCKET_ERROR) {
 				if (WSAGetLastError() != WSA_IO_PENDING) {
-					errDisplay("WSARecv()");
+					errDisplay(L"WSARecv()");
 				}
 				continue;
 			}

@@ -1,14 +1,16 @@
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment(lib, "ws2_32")
+
 #include <winsock2.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #define SERVERIP   "127.0.0.1"
 #define SERVERPORT 9000
 #define BUFSIZE    512
 
 // 소켓 함수 오류 출력 후 종료
-void errQuit(char* msg)
+void errQuit(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -16,13 +18,13 @@ void errQuit(char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	MessageBox(NULL, (LPCTSTR)lpMsgBuf, msg, MB_ICONERROR);
+	MessageBox(NULL, (LPCWSTR)lpMsgBuf, msg, MB_ICONERROR);
 	LocalFree(lpMsgBuf);
 	exit(1);
 }
 
 // 소켓 함수 오류 출력
-void errDisplay(char* msg)
+void errDisplay(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -30,7 +32,7 @@ void errDisplay(char* msg)
 		NULL, WSAGetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&lpMsgBuf, 0, NULL);
-	printf("[%s] %s", msg, (char*)lpMsgBuf);
+	printf("[%s] %s", msg, lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }
 
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
 
 	// socket()
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) errQuit("socket()");
+	if (sock == INVALID_SOCKET) errQuit(L"socket()");
 
 	// connect()
 	SOCKADDR_IN serveraddr;
@@ -74,7 +76,7 @@ int main(int argc, char* argv[])
 	serveraddr.sin_addr.s_addr = inet_addr(SERVERIP);
 	serveraddr.sin_port = htons(SERVERPORT);
 	retval = connect(sock, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) errQuit("connect()");
+	if (retval == SOCKET_ERROR) errQuit(L"connect()");
 
 	// 데이터 통신에 사용할 변수
 	char buf[BUFSIZE + 1];
@@ -97,7 +99,7 @@ int main(int argc, char* argv[])
 		// 데이터 보내기
 		retval = send(sock, buf, strlen(buf), 0);
 		if (retval == SOCKET_ERROR) {
-			errDisplay("send()");
+			errDisplay(L"send()");
 			break;
 		}
 		printf("[TCP 클라이언트] %d바이트를 보냈습니다.\n", retval);
@@ -105,7 +107,7 @@ int main(int argc, char* argv[])
 		// 데이터 받기
 		retval = recvn(sock, buf, retval, 0);
 		if (retval == SOCKET_ERROR) {
-			errDisplay("recv()");
+			errDisplay(L"recv()");
 			break;
 		}
 		else if (retval == 0)
