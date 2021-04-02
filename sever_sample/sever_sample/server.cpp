@@ -71,7 +71,6 @@ void CALLBACK send_packet(int p_id, void* p)
 void do_recv(int key) {
 	players[key].m_recv_over.m_wsabuf[0].buf = reinterpret_cast<CHAR*>(players[key].m_recv_over.m_packetbuf) + players[key].m_prev_size;
 	players[key].m_recv_over.m_wsabuf[0].len = MAX_BUFFER - players[key].m_prev_size;
-	memset(&players[key].m_recv_over, 0, sizeof(players[key].m_recv_over));
 	DWORD recv_flag = 0;
 	WSARecv(players[key].socket, players[key].m_recv_over.m_wsabuf, 1,
 		NULL, &recv_flag, &players[key].m_recv_over.m_over, NULL);

@@ -74,8 +74,8 @@ public:
 	}
 	void draw() {
 		if (false == m_showing) return;
-		float rx = (m_x - g_left_x) * 65.0f + 8;
-		float ry = (m_y - g_top_y) * 65.0f + 8;
+		float rx = (m_x /*- g_left_x*/) * 65.0f + 8;
+		float ry = (m_y /*- g_top_y*/) * 65.0f + 8;
 		m_sprite.setPosition(rx, ry);
 		g_window->draw(m_sprite);
 	}
@@ -228,8 +228,8 @@ void client_main()
 	for (int i = 0; i < SCREEN_WIDTH; ++i)
 		for (int j = 0; j < SCREEN_HEIGHT; ++j)
 		{
-			int tile_x = i + g_left_x;
-			int tile_y = j + g_top_y;
+			int tile_x = i/* + g_left_x*/;
+			int tile_y = j/* + g_top_y*/;
 			if ((tile_x < 0) || (tile_y < 0)) continue;
 			if (((tile_x + tile_y) % 6) < 3) {
 				white_tile.a_move(TILE_WIDTH * i + 7, TILE_WIDTH * j + 7);
