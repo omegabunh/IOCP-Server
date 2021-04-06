@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <map>
+
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "MSWsock.lib")
 
@@ -37,22 +38,7 @@ constexpr int SERVER_ID = 0;
 
 unordered_map <int, SESSION> players;
 
-void display_error(const char* msg, int err_no)
-{
-	WCHAR* lpMsgBuf;
-	FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, err_no,
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf, 0, NULL);
-	std::cout << msg;
-	std::wcout << L"¿¡·¯ " << lpMsgBuf << std::endl;
-	while (true);
-	LocalFree(lpMsgBuf);
-}
-
-void CALLBACK send_packet(int p_id, void* p)
+void send_packet(int p_id, void* p)
 {
 	int p_size = reinterpret_cast<unsigned char*>(p)[0];
 	int p_type = reinterpret_cast<unsigned char*>(p)[1];
@@ -67,15 +53,16 @@ void CALLBACK send_packet(int p_id, void* p)
 	WSASend(players[p_id].socket, s_over->m_wsabuf, 1, NULL, 0, &s_over->m_over, 0);
 }
 
-void do_recv(int key) {
+void do_recv(int key) 
+{
 	players[key].m_recv_over.m_wsabuf[0].buf = reinterpret_cast<CHAR*>(players[key].m_recv_over.m_packetbuf) + players[key].m_prev_size;
 	players[key].m_recv_over.m_wsabuf[0].len = MAX_BUFFER - players[key].m_prev_size;
 	DWORD recv_flag = 0;
-	WSARecv(players[key].socket, players[key].m_recv_over.m_wsabuf, 1,
-		NULL, &recv_flag, &players[key].m_recv_over.m_over, NULL);
+	WSARecv(players[key].socket, players[key].m_recv_over.m_wsabuf, 1, NULL, &recv_flag, &players[key].m_recv_over.m_over, NULL);
 }
 
-void send_move_packet(int p_id) {
+void send_move_packet(int p_id) 
+{
 	s2c_move_player p;
 	p.id = p_id;
 	p.size = sizeof(p);
@@ -85,7 +72,8 @@ void send_move_packet(int p_id) {
 	send_packet(p_id, &p);
 }
 
-void do_move(int p_id, DIRECTION dir) {
+void do_move(int p_id, DIRECTION dir) 
+{
 	auto& x = players[p_id].x;
 	auto& y = players[p_id].y;
 	switch (dir) {
@@ -106,7 +94,8 @@ void do_move(int p_id, DIRECTION dir) {
 	send_move_packet(p_id);
 }
 
-int get_new_player_id() {
+int get_new_player_id() 
+{
 	for (size_t i = SERVER_ID + 1; i < MAX_USER; i++)
 	{
 		if (0 == players.count(i)) return i;
@@ -114,7 +103,8 @@ int get_new_player_id() {
 	}
 }
 
-void send_log_ok_packet(int p_id) {
+void send_log_ok_packet(int p_id) 
+{
 	s2c_login_ok p;
 	p.hp = 10;
 	p.id = p_id;
@@ -127,7 +117,8 @@ void send_log_ok_packet(int p_id) {
 	send_packet(p_id, &p);
 }
 
-void process_packet(int p_id, unsigned char* p_buf) {
+void process_packet(int p_id, unsigned char* p_buf) 
+{
 	switch (p_buf[1])
 	{
 	case C2S_LOGIN: {
@@ -148,35 +139,30 @@ void process_packet(int p_id, unsigned char* p_buf) {
 	}
 
 }
+
 void disconnect(int p_id)
 {
 	closesocket(players[p_id].socket);
 	players.erase(p_id);
 }
+
 int main()
 {
-	/*WSADATA WSAData;
-	WSAStartup(MAKEWORD(2, 2), &WSAData);*/
 	Network* network = Network::GetInstance();
 
-	HANDLE h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
+	HANDLE h_iocp = network->CreatIOCP();
 
 	SOCKET listenSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	CreateIoCompletionPort(reinterpret_cast<HANDLE>(listenSocket), h_iocp, 0, 0);
-	SOCKADDR_IN serverAddr;
-	memset(&serverAddr, 0, sizeof(SOCKADDR_IN));
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(SERVER_PORT);
-	serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-	::bind(listenSocket, (struct sockaddr*)&serverAddr, sizeof(SOCKADDR_IN));
-	listen(listenSocket, SOMAXCONN);
+	network->ConnectIOCP(reinterpret_cast<HANDLE>(listenSocket), h_iocp, 0);
+
+	network->BindAndListen(listenSocket);
 
 	EX_OVER accept_over;
 	accept_over.m_op = OP_ACCEPT;
 	memset(&accept_over.m_over, 0, sizeof(accept_over.m_over));
 
 	SOCKET c_socket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	AcceptEx(listenSocket, c_socket, accept_over.m_packetbuf, 0, 32, 32, NULL, &accept_over.m_over);
+	network->AcceptEX(listenSocket, c_socket, accept_over.m_packetbuf, &accept_over.m_over);
 
 	while (true) {
 		DWORD num_bytes;
@@ -184,18 +170,16 @@ int main()
 		WSAOVERLAPPED* over;
 		BOOL ret = GetQueuedCompletionStatus(h_iocp, &num_bytes, &ikey, &over, INFINITE);
 
-		
 		int key = static_cast<int>(ikey);
 
 		if (FALSE == ret)
 		{
 			if (SERVER_ID == key) {
-				display_error("GQCS: ", WSAGetLastError());
+				network->display_error("GQCS: ", WSAGetLastError());
 				exit(-1);
-
 			}
 			else {
-				display_error("GQCS: ", WSAGetLastError());
+				network->display_error("GQCS: ", WSAGetLastError());
 				disconnect(key);
 			}
 		}
@@ -224,10 +208,12 @@ int main()
 			}
 			do_recv(key);
 		}
-					break;
+			break;
+
 		case OP_SEND:
 			delete ex_over;
 			break;
+
 		case OP_ACCEPT: {
 			int c_id = get_new_player_id();
 			if (-1 != c_id) {
@@ -237,18 +223,17 @@ int main()
 				players[c_id].m_recv_over.m_op = OP_RECV;
 				players[c_id].socket = c_socket;
 				players[c_id].m_prev_size = 0;
-				CreateIoCompletionPort(reinterpret_cast<HANDLE>(c_socket), h_iocp, c_id, 0);
+				network->ConnectIOCP(reinterpret_cast<HANDLE>(c_socket), h_iocp, c_id);
 				do_recv(c_id);
 			}
 			else {
 				closesocket(c_socket);
 			}
-
 			memset(&accept_over.m_over, 0, sizeof(accept_over.m_over));
 			c_socket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-			AcceptEx(listenSocket, c_socket, accept_over.m_packetbuf, 0, 32, 32, NULL, &accept_over.m_over);
+			network->AcceptEX(listenSocket, c_socket, accept_over.m_packetbuf, &accept_over.m_over);
 		}
-					  break;
+			break;
 		}
 	}
 	closesocket(listenSocket);

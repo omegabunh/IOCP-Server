@@ -19,7 +19,7 @@ using namespace std;
 #pragma comment (lib, "winmm.lib")
 #pragma comment (lib, "ws2_32.lib")
 
-#include "protocol.h"
+#include "../../Network/protocol.h"
 
 sf::TcpSocket socket;
 
