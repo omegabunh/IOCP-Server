@@ -26,7 +26,7 @@ public:
 	void Recv(SOCKET sock, char* buf, int dataSize);
 	void ErrQuit(const wchar_t* msg);
 	void ErrDisplay(const wchar_t* msg);
-	void display_error(const char* msg, int err_no);
+	void DisplayError(const char* msg, int err_no);
 	void AcceptEX(SOCKET sock, SOCKET c_sock, PVOID lpBuf, LPOVERLAPPED over);
 	HANDLE CreatIOCP();
 	HANDLE ConnectIOCP(HANDLE sock, HANDLE iocp, ULONG_PTR num);

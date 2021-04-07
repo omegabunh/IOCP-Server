@@ -38,8 +38,18 @@ constexpr int SERVER_ID = 0;
 
 unordered_map <int, SESSION> players;
 
+void DisplayError(const char* msg, int err_no)
+{
+	WCHAR* lpMsgBuf;
+	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, err_no, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+	cout << msg;
+	wcout << lpMsgBuf << endl;
+	LocalFree(lpMsgBuf);
+}
+
 void send_packet(int p_id, void* p)
 {
+	Network* network = Network::GetInstance();
 	int p_size = reinterpret_cast<unsigned char*>(p)[0];
 	int p_type = reinterpret_cast<unsigned char*>(p)[1];
 	cout << "To client [" << p_id << "]: ";
@@ -50,18 +60,50 @@ void send_packet(int p_id, void* p)
 	memcpy(s_over->m_packetbuf, p, p_size);
 	s_over->m_wsabuf[0].buf = reinterpret_cast<CHAR*>(s_over->m_packetbuf);
 	s_over->m_wsabuf[0].len = p_size;
-	WSASend(players[p_id].socket, s_over->m_wsabuf, 1, NULL, 0, &s_over->m_over, 0);
+	auto ret = WSASend(players[p_id].socket, s_over->m_wsabuf, 1, NULL, 0, &s_over->m_over, 0);
+	if (0 != ret) {
+		auto err_no = WSAGetLastError();
+		if (WSA_IO_PENDING != err_no)
+			DisplayError("Error in SendPacket: ", err_no);
+	}
 }
 
-void do_recv(int key) 
+void do_recv(int key)
 {
 	players[key].m_recv_over.m_wsabuf[0].buf = reinterpret_cast<CHAR*>(players[key].m_recv_over.m_packetbuf) + players[key].m_prev_size;
 	players[key].m_recv_over.m_wsabuf[0].len = MAX_BUFFER - players[key].m_prev_size;
 	DWORD recv_flag = 0;
-	WSARecv(players[key].socket, players[key].m_recv_over.m_wsabuf, 1, NULL, &recv_flag, &players[key].m_recv_over.m_over, NULL);
+	auto ret = WSARecv(players[key].socket, players[key].m_recv_over.m_wsabuf, 1, NULL, &recv_flag, &players[key].m_recv_over.m_over, NULL);
+
+	if (0 != ret) {
+		auto err_no = WSAGetLastError();
+		if (WSA_IO_PENDING != err_no)
+			DisplayError("Error in SendPacket: ", err_no);
+	}
 }
 
-void send_move_packet(int p_id) 
+void send_add_player(int c_id, int p_id)
+{
+	s2c_add_player p;
+	p.id = p_id;
+	p.size = sizeof(p);
+	p.type = S2C_ADD_PLAYER;
+	p.x = players[p_id].x;
+	p.y = players[p_id].y;
+	p.race = 0;
+	send_packet(c_id, &p);
+}
+
+void send_remove_player(int c_id, int p_id)
+{
+	s2c_remove_player p;
+	p.id = p_id;
+	p.size = sizeof(p);
+	p.type = S2C_REMOVE_PLAYER;
+	send_packet(c_id, &p);
+}
+
+void send_move_packet(int c_id, int p_id)
 {
 	s2c_move_player p;
 	p.id = p_id;
@@ -69,7 +111,7 @@ void send_move_packet(int p_id)
 	p.type = S2C_MOVE_PLAYER;
 	p.x = players[p_id].x;
 	p.y = players[p_id].y;
-	send_packet(p_id, &p);
+	send_packet(c_id, &p);
 }
 
 void do_move(int p_id, DIRECTION dir) 
@@ -91,7 +133,8 @@ void do_move(int p_id, DIRECTION dir)
 		break;
 	}
 
-	send_move_packet(p_id);
+	for (auto& pl : players)
+		send_move_packet(pl.second.id, p_id);
 }
 
 int get_new_player_id() 
@@ -99,7 +142,6 @@ int get_new_player_id()
 	for (size_t i = SERVER_ID + 1; i < MAX_USER; i++)
 	{
 		if (0 == players.count(i)) return i;
-
 	}
 }
 
@@ -135,7 +177,6 @@ void process_packet(int p_id, unsigned char* p_buf)
 	default:
 		cout << "unknown packet type from client[" << p_id << "] packet type [" << p_buf[1] << "]" << endl;
 		while (true);
-		break;
 	}
 
 }
@@ -144,11 +185,15 @@ void disconnect(int p_id)
 {
 	closesocket(players[p_id].socket);
 	players.erase(p_id);
+	for (auto& pl : players)
+		send_remove_player(pl.second.id, p_id);
 }
 
 int main()
 {
 	Network* network = Network::GetInstance();
+
+	wcout.imbue(locale("korean"));
 
 	HANDLE h_iocp = network->CreatIOCP();
 
@@ -175,15 +220,18 @@ int main()
 		if (FALSE == ret)
 		{
 			if (SERVER_ID == key) {
-				network->display_error("GQCS: ", WSAGetLastError());
+				network->DisplayError("GQCS: ", WSAGetLastError());
 				exit(-1);
 			}
 			else {
-				network->display_error("GQCS: ", WSAGetLastError());
+				network->DisplayError("GQCS: ", WSAGetLastError());
 				disconnect(key);
 			}
 		}
-
+		/*if (0 == num_bytes) {
+			disconnect(key);
+			continue;
+		}*/
 		EX_OVER* ex_over = reinterpret_cast<EX_OVER*>(over);
 		switch (ex_over->m_op)
 		{
@@ -224,6 +272,11 @@ int main()
 				players[c_id].socket = c_socket;
 				players[c_id].m_prev_size = 0;
 				network->ConnectIOCP(reinterpret_cast<HANDLE>(c_socket), h_iocp, c_id);
+				for (auto& pl : players) {
+					if (c_id == pl.second.id) continue;
+					send_add_player(c_id, pl.second.id);
+					send_add_player(pl.second.id, c_id);
+				}
 				do_recv(c_id);
 			}
 			else {
