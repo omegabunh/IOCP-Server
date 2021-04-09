@@ -49,7 +49,7 @@ void DisplayError(const char* msg, int err_no)
 
 void send_packet(int p_id, void* p)
 {
-	Network* network = Network::GetInstance();
+	Net::Network* network = Net::Network::GetInstance();
 	int p_size = reinterpret_cast<unsigned char*>(p)[0];
 	int p_type = reinterpret_cast<unsigned char*>(p)[1];
 	cout << "To client [" << p_id << "]: ";
@@ -191,7 +191,7 @@ void disconnect(int p_id)
 
 int main()
 {
-	Network* network = Network::GetInstance();
+	Net::Network* network = Net::Network::GetInstance();
 
 	wcout.imbue(locale("korean"));
 
@@ -255,7 +255,7 @@ int main()
 				memcpy(ex_over->m_packetbuf, packet_ptr, num_data);
 			}
 			do_recv(key);
-		}
+			}
 			break;
 
 		case OP_SEND:
@@ -285,10 +285,9 @@ int main()
 			memset(&accept_over.m_over, 0, sizeof(accept_over.m_over));
 			c_socket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 			network->AcceptEX(listenSocket, c_socket, accept_over.m_packetbuf, &accept_over.m_over);
-		}
+			}
 			break;
 		}
 	}
-	closesocket(listenSocket);
-	WSACleanup();
+	network->Release(listenSocket);
 }

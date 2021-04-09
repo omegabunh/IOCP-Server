@@ -1,23 +1,23 @@
 #include "Network.h"
 
-Network::Network()
+Net::Network::Network()
 {
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		ErrQuit(L"WSAStartup() Error");
 }
 
-Network::~Network()
+Net::Network::~Network()
 {
 }
 
-Network* Network::GetInstance()
+Net::Network* Net::Network::GetInstance()
 {
 	static Network Instance;
 	return &Instance;
 }
 
-void Network::ErrQuit(const wchar_t* msg)
+void Net::Network::ErrQuit(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -30,7 +30,7 @@ void Network::ErrQuit(const wchar_t* msg)
 	exit(1);
 }
 
-void Network::ErrDisplay(const wchar_t* msg)
+void Net::Network::ErrDisplay(const wchar_t* msg)
 {
 	LPVOID lpMsgBuf;
 	FormatMessage(
@@ -42,7 +42,7 @@ void Network::ErrDisplay(const wchar_t* msg)
 	LocalFree(lpMsgBuf);
 }
 
-int Network::Recvn(SOCKET s, char* buf, int len, int flags)
+int Net::Network::Recvn(SOCKET s, char* buf, int len, int flags)
 {
 	int received;
 	char* ptr = buf;
@@ -61,7 +61,7 @@ int Network::Recvn(SOCKET s, char* buf, int len, int flags)
 	return (len - left);
 }
 
-void Network::Connect(SOCKET sock, const char* address)
+void Net::Network::Connect(SOCKET sock, const char* address)
 {
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
@@ -73,7 +73,7 @@ void Network::Connect(SOCKET sock, const char* address)
 	if (retval == SOCKET_ERROR)	ErrQuit(L"connect error()");
 }
 
-void Network::BindAndListen(SOCKET sock)
+void Net::Network::BindAndListen(SOCKET sock)
 {
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
@@ -88,24 +88,24 @@ void Network::BindAndListen(SOCKET sock)
 	if (retval == SOCKET_ERROR) ErrQuit(L"listen error()");
 }
 
-SOCKET Network::Accept(SOCKET sock)
+SOCKET Net::Network::Accept(SOCKET sock)
 {
 	SOCKADDR_IN clientAddr = {};
 	int clientAddrSize = sizeof(clientAddr);
 	return accept(sock, (SOCKADDR*)&clientAddr, &clientAddrSize);
 }
 
-void Network::Send(SOCKET sock, char* buf, int dataSize)
+void Net::Network::Send(SOCKET sock, char* buf, int dataSize)
 {
 	retval = send(sock, buf, dataSize, 0);
 }
 
-void Network::Recv(SOCKET sock, char* buf, int dataSize)
+void Net::Network::Recv(SOCKET sock, char* buf, int dataSize)
 {
 	retval = Recvn(sock, buf, dataSize, 0);
 }
 
-void Network::Release(SOCKET sock)
+void Net::Network::Release(SOCKET sock)
 {
 	closesocket(sock);
 	WSACleanup();
@@ -113,7 +113,7 @@ void Network::Release(SOCKET sock)
 
 // IOCP server
 
-void Network::DisplayError(const char* msg, int err_no)
+void Net::Network::DisplayError(const char* msg, int err_no)
 {
 	WCHAR* lpMsgBuf;
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
@@ -126,17 +126,17 @@ void Network::DisplayError(const char* msg, int err_no)
 	LocalFree(lpMsgBuf);
 }
 
-void Network::AcceptEX(SOCKET sock, SOCKET c_sock, PVOID lpBuf, LPOVERLAPPED over)
+void Net::Network::AcceptEX(SOCKET sock, SOCKET c_sock, PVOID lpBuf, LPOVERLAPPED over)
 {
 	AcceptEx(sock, c_sock, lpBuf, 0, 32, 32, NULL, over);
 }
 
-HANDLE Network::CreatIOCP()
+HANDLE Net::Network::CreatIOCP()
 {
 	return CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 }
 
-HANDLE Network::ConnectIOCP(HANDLE sock, HANDLE iocp, ULONG_PTR num)
+HANDLE Net::Network::ConnectIOCP(HANDLE sock, HANDLE iocp, ULONG_PTR num)
 {
 	return CreateIoCompletionPort(sock, iocp, num, 0);
 }
