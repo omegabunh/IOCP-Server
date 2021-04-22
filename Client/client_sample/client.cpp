@@ -21,7 +21,7 @@ using namespace std;
 
 #include "../../Network/protocol.h"
 
-sf::TcpSocket socket;
+sf::TcpSocket m_socket;
 
 constexpr auto SCREEN_WIDTH = WORLD_X_SIZE;
 constexpr auto SCREEN_HEIGHT = WORLD_Y_SIZE;
@@ -216,7 +216,7 @@ void client_main()
 	char net_buf[BUF_SIZE];
 	size_t	received;
 
-	auto recv_result = socket.receive(net_buf, BUF_SIZE, received);
+	auto recv_result = m_socket.receive(net_buf, BUF_SIZE, received);
 	if (recv_result == sf::Socket::Error)
 	{
 		wcout << L"Recv 에러!";
@@ -252,7 +252,7 @@ void send_move_packet(DIRECTION dr)
 	packet.type = C2S_MOVE;
 	packet.dir = dr;
 	size_t sent = 0;
-	socket.send(&packet, sizeof(packet), sent);
+	m_socket.send(&packet, sizeof(packet), sent);
 }
 
 void send_login_packet(string& name)
@@ -262,18 +262,18 @@ void send_login_packet(string& name)
 	packet.type = C2S_LOGIN;
 	strcpy_s(packet.name, name.c_str());
 	size_t sent = 0;
-	socket.send(&packet, sizeof(packet), sent);
+	m_socket.send(&packet, sizeof(packet), sent);
 }
 
 
 int main()
 {
 	wcout.imbue(locale("korean"));
-	sf::Socket::Status status = socket.connect("127.0.0.1", SERVER_PORT);
+	sf::Socket::Status status = m_socket.connect("127.0.0.1", SERVER_PORT);
 	string name{ "CL" };
 	name += to_string(rand() % 100);
 	send_login_packet(name);
-	socket.setBlocking(false);
+	m_socket.setBlocking(false);
 
 	if (status != sf::Socket::Done) {
 		wcout << L"서버와 연결할 수 없습니다.\n";

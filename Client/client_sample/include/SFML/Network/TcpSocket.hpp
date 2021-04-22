@@ -40,7 +40,7 @@ class IpAddress;
 class Packet;
 
 ////////////////////////////////////////////////////////////
-/// \brief Specialized socket using the TCP protocol
+/// \brief Specialized m_socket using the TCP protocol
 ///
 ////////////////////////////////////////////////////////////
 class SFML_NETWORK_API TcpSocket : public Socket
@@ -54,11 +54,11 @@ public:
     TcpSocket();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Get the port to which the socket is bound locally
+    /// \brief Get the port to which the m_socket is bound locally
     ///
-    /// If the socket is not connected, this function returns 0.
+    /// If the m_socket is not connected, this function returns 0.
     ///
-    /// \return Port to which the socket is bound
+    /// \return Port to which the m_socket is bound
     ///
     /// \see connect, getRemotePort
     ///
@@ -68,7 +68,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Get the address of the connected peer
     ///
-    /// It the socket is not connected, this function returns
+    /// It the m_socket is not connected, this function returns
     /// sf::IpAddress::None.
     ///
     /// \return Address of the remote peer
@@ -80,11 +80,11 @@ public:
 
     ////////////////////////////////////////////////////////////
     /// \brief Get the port of the connected peer to which
-    ///        the socket is connected
+    ///        the m_socket is connected
     ///
-    /// If the socket is not connected, this function returns 0.
+    /// If the m_socket is not connected, this function returns 0.
     ///
-    /// \return Remote port to which the socket is connected
+    /// \return Remote port to which the m_socket is connected
     ///
     /// \see getRemoteAddress
     ///
@@ -92,12 +92,12 @@ public:
     unsigned short getRemotePort() const;
 
     ////////////////////////////////////////////////////////////
-    /// \brief Connect the socket to a remote peer
+    /// \brief Connect the m_socket to a remote peer
     ///
     /// In blocking mode, this function may take a while, especially
     /// if the remote peer is not reachable. The last parameter allows
     /// you to stop trying to connect after a given timeout.
-    /// If the socket is already connected, the connection is
+    /// If the m_socket is already connected, the connection is
     /// forcibly disconnected before attempting to connect again.
     ///
     /// \param remoteAddress Address of the remote peer
@@ -112,10 +112,10 @@ public:
     Status connect(const IpAddress& remoteAddress, unsigned short remotePort, Time timeout = Time::Zero);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Disconnect the socket from its remote peer
+    /// \brief Disconnect the m_socket from its remote peer
     ///
     /// This function gracefully closes the connection. If the
-    /// socket is not connected, this function has no effect.
+    /// m_socket is not connected, this function has no effect.
     ///
     /// \see connect
     ///
@@ -128,7 +128,7 @@ public:
     /// To be able to handle partial sends over non-blocking
     /// sockets, use the send(const void*, std::size_t, std::size_t&)
     /// overload instead.
-    /// This function will fail if the socket is not connected.
+    /// This function will fail if the m_socket is not connected.
     ///
     /// \param data Pointer to the sequence of bytes to send
     /// \param size Number of bytes to send
@@ -143,7 +143,7 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Send raw data to the remote peer
     ///
-    /// This function will fail if the socket is not connected.
+    /// This function will fail if the m_socket is not connected.
     ///
     /// \param data Pointer to the sequence of bytes to send
     /// \param size Number of bytes to send
@@ -161,7 +161,7 @@ public:
     ///
     /// In blocking mode, this function will wait until some
     /// bytes are actually received.
-    /// This function will fail if the socket is not connected.
+    /// This function will fail if the m_socket is not connected.
     ///
     /// \param data     Pointer to the array to fill with the received bytes
     /// \param size     Maximum number of bytes that can be received
@@ -181,7 +181,7 @@ public:
     /// you \em must retry sending the same unmodified packet before sending
     /// anything else in order to guarantee the packet arrives at the remote
     /// peer uncorrupted.
-    /// This function will fail if the socket is not connected.
+    /// This function will fail if the m_socket is not connected.
     ///
     /// \param packet Packet to send
     ///
@@ -197,7 +197,7 @@ public:
     ///
     /// In blocking mode, this function will wait until the whole packet
     /// has been received.
-    /// This function will fail if the socket is not connected.
+    /// This function will fail if the m_socket is not connected.
     ///
     /// \param packet Packet to fill with the received data
     ///
@@ -242,51 +242,51 @@ private:
 /// \ingroup network
 ///
 /// TCP is a connected protocol, which means that a TCP
-/// socket can only communicate with the host it is connected
+/// m_socket can only communicate with the host it is connected
 /// to. It can't send or receive anything if it is not connected.
 ///
 /// The TCP protocol is reliable but adds a slight overhead.
 /// It ensures that your data will always be received in order
 /// and without errors (no data corrupted, lost or duplicated).
 ///
-/// When a socket is connected to a remote host, you can
+/// When a m_socket is connected to a remote host, you can
 /// retrieve informations about this host with the
 /// getRemoteAddress and getRemotePort functions. You can
-/// also get the local port to which the socket is bound
-/// (which is automatically chosen when the socket is connected),
+/// also get the local port to which the m_socket is bound
+/// (which is automatically chosen when the m_socket is connected),
 /// with the getLocalPort function.
 ///
 /// Sending and receiving data can use either the low-level
 /// or the high-level functions. The low-level functions
 /// process a raw sequence of bytes, and cannot ensure that
 /// one call to Send will exactly match one call to Receive
-/// at the other end of the socket.
+/// at the other end of the m_socket.
 ///
 /// The high-level interface uses packets (see sf::Packet),
 /// which are easier to use and provide more safety regarding
 /// the data that is exchanged. You can look at the sf::Packet
 /// class to get more details about how they work.
 ///
-/// The socket is automatically disconnected when it is destroyed,
+/// The m_socket is automatically disconnected when it is destroyed,
 /// but if you want to explicitly close the connection while
-/// the socket instance is still alive, you can call disconnect.
+/// the m_socket instance is still alive, you can call disconnect.
 ///
 /// Usage example:
 /// \code
 /// // ----- The client -----
 ///
-/// // Create a socket and connect it to 192.168.1.50 on port 55001
-/// sf::TcpSocket socket;
-/// socket.connect("192.168.1.50", 55001);
+/// // Create a m_socket and connect it to 192.168.1.50 on port 55001
+/// sf::TcpSocket m_socket;
+/// m_socket.connect("192.168.1.50", 55001);
 ///
 /// // Send a message to the connected host
 /// std::string message = "Hi, I am a client";
-/// socket.send(message.c_str(), message.size() + 1);
+/// m_socket.send(message.c_str(), message.size() + 1);
 ///
 /// // Receive an answer from the server
 /// char buffer[1024];
 /// std::size_t received = 0;
-/// socket.receive(buffer, sizeof(buffer), received);
+/// m_socket.receive(buffer, sizeof(buffer), received);
 /// std::cout << "The server said: " << buffer << std::endl;
 ///
 /// // ----- The server -----
@@ -296,19 +296,19 @@ private:
 /// listener.listen(55001);
 ///
 /// // Wait for a connection
-/// sf::TcpSocket socket;
-/// listener.accept(socket);
-/// std::cout << "New client connected: " << socket.getRemoteAddress() << std::endl;
+/// sf::TcpSocket m_socket;
+/// listener.accept(m_socket);
+/// std::cout << "New client connected: " << m_socket.getRemoteAddress() << std::endl;
 ///
 /// // Receive a message from the client
 /// char buffer[1024];
 /// std::size_t received = 0;
-/// socket.receive(buffer, sizeof(buffer), received);
+/// m_socket.receive(buffer, sizeof(buffer), received);
 /// std::cout << "The client said: " << buffer << std::endl;
 ///
 /// // Send an answer
 /// std::string message = "Welcome, client";
-/// socket.send(message.c_str(), message.size() + 1);
+/// m_socket.send(message.c_str(), message.size() + 1);
 /// \endcode
 ///
 /// \see sf::Socket, sf::UdpSocket, sf::Packet

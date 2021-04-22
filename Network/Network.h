@@ -6,13 +6,15 @@
 #include <MSWSock.h>
 
 #include <cstdlib>
-#include <windows.h>
 #include <cassert>
 
 
 #define SERVERIP   "127.0.0.1"
 #define SERVERPORT 3500
 #define BUFSIZE    108
+
+#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "MSWsock.lib")
 
 namespace Net
 {

@@ -39,7 +39,7 @@ namespace sf
 class Packet;
 
 ////////////////////////////////////////////////////////////
-/// \brief Specialized socket using the UDP protocol
+/// \brief Specialized m_socket using the UDP protocol
 ///
 ////////////////////////////////////////////////////////////
 class SFML_NETWORK_API UdpSocket : public Socket
@@ -61,12 +61,12 @@ public:
     UdpSocket();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Get the port to which the socket is bound locally
+    /// \brief Get the port to which the m_socket is bound locally
     ///
-    /// If the socket is not bound to a port, this function
+    /// If the m_socket is not bound to a port, this function
     /// returns 0.
     ///
-    /// \return Port to which the socket is bound
+    /// \return Port to which the m_socket is bound
     ///
     /// \see bind
     ///
@@ -74,20 +74,20 @@ public:
     unsigned short getLocalPort() const;
 
     ////////////////////////////////////////////////////////////
-    /// \brief Bind the socket to a specific port
+    /// \brief Bind the m_socket to a specific port
     ///
-    /// Binding the socket to a port is necessary for being
+    /// Binding the m_socket to a port is necessary for being
     /// able to receive data on that port.
     /// You can use the special value Socket::AnyPort to tell the
     /// system to automatically pick an available port, and then
     /// call getLocalPort to retrieve the chosen port.
     ///
-    /// Since the socket can only be bound to a single port at
+    /// Since the m_socket can only be bound to a single port at
     /// any given moment, if it is already bound when this
     /// function is called, it will be unbound from the previous
     /// port before being bound to the new one.
     ///
-    /// \param port    Port to bind the socket to
+    /// \param port    Port to bind the m_socket to
     /// \param address Address of the interface to bind to
     ///
     /// \return Status code
@@ -98,13 +98,13 @@ public:
     Status bind(unsigned short port, const IpAddress& address = IpAddress::Any);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Unbind the socket from the local port to which it is bound
+    /// \brief Unbind the m_socket from the local port to which it is bound
     ///
-    /// The port that the socket was previously bound to is immediately
+    /// The port that the m_socket was previously bound to is immediately
     /// made available to the operating system after this function is called.
     /// This means that a subsequent call to bind() will be able to re-bind
     /// the port if no other process has done so in the mean time.
-    /// If the socket is not bound to a port, this function has no effect.
+    /// If the m_socket is not bound to a port, this function has no effect.
     ///
     /// \see bind
     ///
@@ -206,7 +206,7 @@ private:
 /// \class sf::UdpSocket
 /// \ingroup network
 ///
-/// A UDP socket is a connectionless socket. Instead of
+/// A UDP m_socket is a connectionless m_socket. Instead of
 /// connecting once to a remote host, like TCP sockets,
 /// it can send to and receive from any host at any time.
 ///
@@ -241,9 +241,9 @@ private:
 /// of the protocol (dropped, mixed or duplicated datagrams may
 /// lead to a big mess when trying to recompose a packet).
 ///
-/// If the socket is bound to a port, it is automatically
-/// unbound from it when the socket is destroyed. However,
-/// you can unbind the socket explicitly with the Unbind
+/// If the m_socket is bound to a port, it is automatically
+/// unbound from it when the m_socket is destroyed. However,
+/// you can unbind the m_socket explicitly with the Unbind
 /// function if necessary, to stop receiving messages or
 /// make the port available for other sockets.
 ///
@@ -251,39 +251,39 @@ private:
 /// \code
 /// // ----- The client -----
 ///
-/// // Create a socket and bind it to the port 55001
-/// sf::UdpSocket socket;
-/// socket.bind(55001);
+/// // Create a m_socket and bind it to the port 55001
+/// sf::UdpSocket m_socket;
+/// m_socket.bind(55001);
 ///
 /// // Send a message to 192.168.1.50 on port 55002
 /// std::string message = "Hi, I am " + sf::IpAddress::getLocalAddress().toString();
-/// socket.send(message.c_str(), message.size() + 1, "192.168.1.50", 55002);
+/// m_socket.send(message.c_str(), message.size() + 1, "192.168.1.50", 55002);
 ///
 /// // Receive an answer (most likely from 192.168.1.50, but could be anyone else)
 /// char buffer[1024];
 /// std::size_t received = 0;
 /// sf::IpAddress sender;
 /// unsigned short port;
-/// socket.receive(buffer, sizeof(buffer), received, sender, port);
+/// m_socket.receive(buffer, sizeof(buffer), received, sender, port);
 /// std::cout << sender.ToString() << " said: " << buffer << std::endl;
 ///
 /// // ----- The server -----
 ///
-/// // Create a socket and bind it to the port 55002
-/// sf::UdpSocket socket;
-/// socket.bind(55002);
+/// // Create a m_socket and bind it to the port 55002
+/// sf::UdpSocket m_socket;
+/// m_socket.bind(55002);
 ///
 /// // Receive a message from anyone
 /// char buffer[1024];
 /// std::size_t received = 0;
 /// sf::IpAddress sender;
 /// unsigned short port;
-/// socket.receive(buffer, sizeof(buffer), received, sender, port);
+/// m_socket.receive(buffer, sizeof(buffer), received, sender, port);
 /// std::cout << sender.ToString() << " said: " << buffer << std::endl;
 ///
 /// // Send an answer
 /// std::string message = "Welcome " + sender.toString();
-/// socket.send(message.c_str(), message.size() + 1, sender, port);
+/// m_socket.send(message.c_str(), message.size() + 1, sender, port);
 /// \endcode
 ///
 /// \see sf::Socket, sf::TcpSocket, sf::Packet

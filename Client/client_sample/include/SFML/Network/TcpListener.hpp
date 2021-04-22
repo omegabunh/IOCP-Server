@@ -52,12 +52,12 @@ public:
     TcpListener();
 
     ////////////////////////////////////////////////////////////
-    /// \brief Get the port to which the socket is bound locally
+    /// \brief Get the port to which the m_socket is bound locally
     ///
-    /// If the socket is not listening to a port, this function
+    /// If the m_socket is not listening to a port, this function
     /// returns 0.
     ///
-    /// \return Port to which the socket is bound
+    /// \return Port to which the m_socket is bound
     ///
     /// \see listen
     ///
@@ -67,10 +67,10 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Start listening for incoming connection attempts
     ///
-    /// This function makes the socket start listening on the
+    /// This function makes the m_socket start listening on the
     /// specified port, waiting for incoming connection attempts.
     ///
-    /// If the socket is already listening on a port when this
+    /// If the m_socket is already listening on a port when this
     /// function is called, it will stop listening on the old
     /// port before starting to listen on the new port.
     ///
@@ -85,10 +85,10 @@ public:
     Status listen(unsigned short port, const IpAddress& address = IpAddress::Any);
 
     ////////////////////////////////////////////////////////////
-    /// \brief Stop listening and close the socket
+    /// \brief Stop listening and close the m_socket
     ///
     /// This function gracefully stops the listener. If the
-    /// socket is not listening, this function has no effect.
+    /// m_socket is not listening, this function has no effect.
     ///
     /// \see listen
     ///
@@ -98,17 +98,17 @@ public:
     ////////////////////////////////////////////////////////////
     /// \brief Accept a new connection
     ///
-    /// If the socket is in blocking mode, this function will
+    /// If the m_socket is in blocking mode, this function will
     /// not return until a connection is actually received.
     ///
-    /// \param socket Socket that will hold the new connection
+    /// \param m_socket Socket that will hold the new connection
     ///
     /// \return Status code
     ///
     /// \see listen
     ///
     ////////////////////////////////////////////////////////////
-    Status accept(TcpSocket& socket);
+    Status accept(TcpSocket& m_socket);
 };
 
 
@@ -122,7 +122,7 @@ public:
 /// \class sf::TcpListener
 /// \ingroup network
 ///
-/// A listener socket is a special type of socket that listens to
+/// A listener m_socket is a special type of m_socket that listens to
 /// a given port and waits for connections on that port.
 /// This is all it can do.
 ///
@@ -133,17 +133,17 @@ public:
 ///
 /// Listener sockets are specific to the TCP protocol,
 /// UDP sockets are connectionless and can therefore communicate
-/// directly. As a consequence, a listener socket will always
+/// directly. As a consequence, a listener m_socket will always
 /// return the new connections as sf::TcpSocket instances.
 ///
 /// A listener is automatically closed on destruction, like all
-/// other types of socket. However if you want to stop listening
-/// before the socket is destroyed, you can call its close()
+/// other types of m_socket. However if you want to stop listening
+/// before the m_socket is destroyed, you can call its close()
 /// function.
 ///
 /// Usage example:
 /// \code
-/// // Create a listener socket and make it wait for new
+/// // Create a listener m_socket and make it wait for new
 /// // connections on port 55001
 /// sf::TcpListener listener;
 /// listener.listen(55001);

@@ -444,14 +444,14 @@ private:
 /// sf::Packet packet;
 /// packet << x << s << d;
 ///
-/// // Send it over the network (socket is a valid sf::TcpSocket)
-/// socket.send(packet);
+/// // Send it over the network (m_socket is a valid sf::TcpSocket)
+/// m_socket.send(packet);
 ///
 /// -----------------------------------------------------------------
 ///
 /// // Receive the packet at the other end
 /// sf::Packet packet;
-/// socket.receive(packet);
+/// m_socket.receive(packet);
 ///
 /// // Extract the variables contained in the packet
 /// sf::Uint32 x;

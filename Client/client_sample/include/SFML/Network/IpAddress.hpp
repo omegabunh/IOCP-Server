@@ -127,7 +127,7 @@ public:
     ///
     /// The returned number is the internal representation of the
     /// address, and should be used for optimization purposes only
-    /// (like sending the address through a socket).
+    /// (like sending the address through a m_socket).
     /// The integer produced by this function can then be converted
     /// back to a sf::IpAddress with the proper constructor.
     ///
